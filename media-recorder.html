@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+ *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
+ *
+ *  Use of this source code is governed by a BSD-style license
+ *  that can be found in the LICENSE file in the root of the source
+ *  tree.
+-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta content="WebRTC code samples" name="description">
+  <title>Peer connection: audio only</title>
+</head>
+
+<body>
+
+<div>
+  <button id="start-recording">Start Streaming</button>
+  <button id="stop-recording">Stop Streaming</button>
+  <a download="record.webm" href="#" id="download">Download</a>
+</div>
+
+<script>
+  const startRecording = document.getElementById('start-recording');
+  const stopRecording = document.getElementById('stop-recording');
+  const downloadLink = document.getElementById('download');
+
+  startRecording.onclick = function () {
+    if (navigator.mediaDevices) {
+      console.log('getUserMedia supported.');
+
+      var constraints = { video: true };
+      var chunks = [];
+
+      navigator.mediaDevices.getUserMedia(constraints)
+        .then(function (stream) {
+
+          var mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+          mediaRecorder.start();
+          console.log(mediaRecorder.state);
+          console.log("recorder started");
+
+          stopRecording.onclick = function () {
+            mediaRecorder.stop();
+            console.log(mediaRecorder.state);
+            console.log("recorder stopped");
+            // stream.getTracks()[0].stop();
+            let tracks = stream.getTracks();
+            console.log('tracks', tracks);
+            tracks.forEach(e => e.stop());
+          };
+
+          mediaRecorder.onstop = function (e) {
+            console.log("data available after MediaRecorder.stop() called.");
+
+            var blob = new Blob(chunks, { 'type': 'video/webm' });
+            var audioURL = URL.createObjectURL(blob);
+            console.log("recorder stopped", audioURL);
+            downloadLink.href = audioURL;
+          };
+
+          mediaRecorder.ondataavailable = function (e) {
+            console.log('dataavailable', e);
+            chunks.push(e.data);
+          };
+        })
+        .catch(function (err) {
+          console.log('The following error occurred: ' + err);
+        });
+    }
+  };
+
+
+</script>
+</body>
+</html>
