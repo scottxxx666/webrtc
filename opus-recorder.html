@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>opus recorder</title>
+</head>
+<body>
+<button id="start">start</button>
+<button id="end">end</button>
+<h2>Recordings</h2>
+<ul id="recordingslist"></ul>
+<script src="/libs/recorder.min.js"></script>
+<script>
+  const startRecording = document.getElementById('start');
+  const stopRecording = document.getElementById('end');
+  const recordingslist = document.getElementById('recordingslist');
+
+  let recorder;
+  startRecording.addEventListener('click', () => {
+    console.log('click start');
+    recorder = new Recorder({
+      // monitorGain: parseInt(monitorGain.value, 10),
+      // recordingGain: parseInt(recordingGain.value, 10),
+      // numberOfChannels: parseInt(numberOfChannels.value, 10),
+      // wavBitDepth: parseInt(bitDepth.value, 10),
+      encoderPath: "/libs/waveWorker.min.js",
+    });
+
+    recorder.start().catch(function (e) {
+      screenLogger('Error encountered:', e.message);
+    });
+
+    recorder.onstart = function () {
+      console.log('Recorder is started');
+    };
+
+    recorder.onstop = function () {
+      console.log('Recorder is stopped');
+    };
+
+    recorder.ondataavailable = function (typedArray) {
+      var dataBlob = new Blob([typedArray], { type: 'audio/wav' });
+      var fileName = new Date().toISOString() + ".wav";
+      var url = URL.createObjectURL(dataBlob);
+
+      var audio = document.createElement('audio');
+      audio.controls = true;
+      audio.src = url;
+
+      var link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.innerHTML = link.download;
+
+      var li = document.createElement('li');
+      li.appendChild(link);
+      li.appendChild(audio);
+
+      recordingslist.appendChild(li);
+    };
+  });
+
+  stopRecording.addEventListener('click', () => {
+    recorder.stop();
+  });
+
+</script>
+</body>
+</html>
