@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Record RTC</title>
+</head>
+<body>
+<button id="start">start</button>
+<button id="end">end</button>
+<script src="https://www.WebRTC-Experiment.com/RecordRTC.js"></script>
+<script>
+  const startRecording = document.getElementById('start');
+  const stopRecording = document.getElementById('end');
+
+  let recorder;
+  startRecording.addEventListener('click', () => {
+    navigator.mediaDevices.getUserMedia({
+      // video: true,
+      audio: true,
+    }).then(async function (stream) {
+      recorder = RecordRTC(stream, {
+        type: 'audio',
+        // type: 'video',
+        mimeType: 'audio/wav',
+        // mimeType: 'video/mp4',
+        // mimeType: 'video/webm;codecs=h264',
+        // recorderType: MediaStreamRecorder,
+      });
+      recorder.startRecording();
+    });
+
+    stopRecording.addEventListener('click', () => {
+      recorder.stopRecording(function () {
+        let blob = recorder.getBlob();
+        invokeSaveAsDialog(blob, 'test.wav');
+      });
+    });
+
+  });
+</script>
+</body>
+</html>
