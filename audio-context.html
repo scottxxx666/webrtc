@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>a</title>
+</head>
+
+<body>
+
+<div>
+  <button id="start-recording">Start Streaming</button>
+  <button id="stop-recording">Stop Streaming</button>
+  <a download="record.webm" href="#" id="download">Download</a>
+</div>
+
+<script>
+  const startRecording = document.getElementById('start-recording');
+  const stopRecording = document.getElementById('stop-recording');
+  const downloadLink = document.getElementById('download');
+
+  startRecording.onclick = function () {
+    if (navigator.mediaDevices) {
+      console.log('getUserMedia supported.');
+
+      navigator.mediaDevices.getUserMedia({ video: false, audio: true })
+        .then(async function (stream) {
+          const audioContext = new AudioContext();
+          const source = audioContext.createMediaStreamSource(stream);
+
+          await audioContext.audioWorklet.addModule('recorder-processor.js');
+          const recorderNode = new window.AudioWorkletNode(
+            audioContext,
+            'recorder-worklet',
+          );
+
+          source.connect(recorderNode);
+          recorderNode.connect(audioContext.destination);
+          recorderNode.port.onmessage = (e) => {
+            if (e.data.eventType === 'data') {
+              const audioData = e.data.audioBuffer;
+              console.log(audioData);
+              // process pcm data
+            }
+            if (e.data.eventType === 'stop') {
+              // recording has stopped
+            }
+          };
+          const time = 0;
+          const duration = 2000;
+          recorderNode.parameters.get('isRecording').setValueAtTime(1, time);
+          recorderNode.parameters.get('isRecording').setValueAtTime(0, time + duration);
+          console.log('??');
+          // source.start(time);
+
+        })
+        .catch(function (err) {
+          console.log('The following error occurred: ' + err);
+        });
+    }
+  };
+
+
+</script>
+</body>
+</html>
