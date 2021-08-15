@@ -18,12 +18,29 @@
   const stopRecording = document.getElementById('stop-recording');
   const downloadLink = document.getElementById('download');
 
+  function convertFloat32ToInt16(buffer) {
+    var l = buffer.length;
+    var buf = new Int16Array(l);
+    while (l--) {
+      buf[l] = Math.min(1, buffer[l]) * 0x7FFF;
+    }
+    // return buf.buffer;
+    return buf;
+  }
+
   startRecording.onclick = function () {
     if (navigator.mediaDevices) {
       console.log('getUserMedia supported.');
 
-      navigator.mediaDevices.getUserMedia({ video: false, audio: true })
+      navigator.mediaDevices.getUserMedia({ video: false, audio: { sampleRate: 8000 } })
         .then(async function (stream) {
+          const [audioTrack] = stream.getAudioTracks();
+
+          const capabilities = audioTrack.getCapabilities();
+          const settings = audioTrack.getSettings();
+          console.log(capabilities);
+          console.log(settings);
+
           const audioContext = new AudioContext();
           const source = audioContext.createMediaStreamSource(stream);
 
@@ -40,16 +57,17 @@
               const audioData = e.data.audioBuffer;
               console.log(audioData);
               // process pcm data
+              const a = convertFloat32ToInt16(audioData);
+              console.log(a);
             }
             if (e.data.eventType === 'stop') {
               // recording has stopped
             }
           };
           const time = 0;
-          const duration = 2000;
+          const duration = 125;
           recorderNode.parameters.get('isRecording').setValueAtTime(1, time);
           recorderNode.parameters.get('isRecording').setValueAtTime(0, time + duration);
-          console.log('??');
           // source.start(time);
 
         })
